@@ -504,6 +504,48 @@
       display: none;
     }
 
+    /* ===== TIME-UP STATE ===== */
+    .screen.time-up-state {
+      background: rgba(233, 69, 96, 0.12);
+    }
+    .time-up-overlay {
+      text-align: center;
+      padding: 2rem 1.5rem;
+      background: var(--error-container);
+      border-radius: var(--radius-lg);
+      margin-top: 1rem;
+    }
+    .time-up-overlay .headline-md {
+      color: #e94560;
+    }
+    .pending-list {
+      list-style: none;
+      margin-top: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .pending-list li {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.9rem;
+      background: var(--surface-container-high);
+      border-radius: var(--radius-md);
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .pending-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .pending-dot.waiting { background: #e94560; }
+    .pending-dot.done { background: #2ecc71; }
+    .pending-name.done { color: var(--on-surface-variant); }
+
     /* ===== SECTION HEADING ===== */
     .section-heading {
       display: flex;
@@ -563,6 +605,30 @@
       gap: 0.5rem;
     }
 
+    /* ===== TIME OPTIONS ===== */
+    .time-options {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .time-option {
+      flex: 1;
+      padding: 0.75rem 0.5rem;
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--on-surface-variant);
+      background: var(--surface-container-highest);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .time-option:hover { background: var(--surface-bright); }
+    .time-option.selected {
+      background: linear-gradient(135deg, var(--primary), var(--primary-container));
+      color: var(--surface);
+    }
+
     /* ===== BETWEEN ROUNDS HERO ===== */
     .between-hero {
       text-align: center;
@@ -618,6 +684,18 @@
         <div class="form-group" style="margin-bottom:0">
           <textarea id="story-prompt" placeholder="Once upon a time in a nebula far beyond the reach of time..." maxlength="500"></textarea>
           <div class="char-count"><span id="prompt-char-count">0</span>/500</div>
+        </div>
+      </div>
+
+      <div class="spacer-md"></div>
+
+      <div class="card">
+        <div class="label-lg" style="margin-bottom:0.75rem">Round Pace</div>
+        <div class="time-options">
+          <button class="time-option" data-time="10" onclick="selectTime(this)">10s</button>
+          <button class="time-option" data-time="60" onclick="selectTime(this)">60s</button>
+          <button class="time-option selected" data-time="90" onclick="selectTime(this)">90s</button>
+          <button class="time-option" data-time="120" onclick="selectTime(this)">120s</button>
         </div>
       </div>
 
@@ -746,11 +824,24 @@
 
       <div id="locked-message" class="locked-overlay" style="display:none">
         <div class="headline-md" style="margin-bottom:0.4rem">Time's up!</div>
-        <p class="body-md">The quill has been sealed. Waiting for the next chapter...</p>
+        <p class="body-md">The quill has been sealed. You can still submit below.</p>
       </div>
 
       <div id="submitted-message" class="waiting-message" style="display:none">
         Chapter submitted! Waiting for the round to end...
+      </div>
+
+      <div id="time-up-overlay" class="time-up-overlay" style="display:none">
+        <div class="headline-md" style="margin-bottom:0.4rem">Time's Up!</div>
+        <p class="body-md" style="margin-bottom:1rem">The clock has run out.</p>
+        <ul class="pending-list" id="pending-players-list"></ul>
+        <div class="spacer-md"></div>
+        <div id="time-up-host-controls" style="display:none">
+          <button class="btn-primary" onclick="endRound()">Proceed to Next Round</button>
+        </div>
+        <div id="time-up-guest-waiting" class="waiting-message" style="padding:0.5rem 0 0">
+          Waiting for the host to proceed...
+        </div>
       </div>
     </div>
 
@@ -805,8 +896,15 @@
     let gameCode = null;
     let submitted = false;
     let locked = false;
-    const TOTAL_TIME = 90;
+    let TOTAL_TIME = 90;
     const CIRCUMFERENCE = 2 * Math.PI * 52; // ~326.73
+    let selectedTime = 90;
+
+    function selectTime(btn) {
+      document.querySelectorAll('.time-option').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedTime = parseInt(btn.dataset.time);
+    }
 
     // Screen management
     function showScreen(id) {
@@ -845,6 +943,7 @@
           gameCode = res.code;
           enterLobby(res.code, prompt);
           socket.emit('set-prompt', { prompt });
+          socket.emit('set-time', { time: selectedTime });
         }
       });
     }
@@ -955,7 +1054,8 @@
     }
 
     // Round start
-    socket.on('round-start', ({ round, totalRounds, prompt, previousParagraph, timeRemaining }) => {
+    socket.on('round-start', ({ round, totalRounds, prompt, previousParagraph, timeRemaining, totalTime }) => {
+      TOTAL_TIME = totalTime || timeRemaining;
       submitted = false;
       locked = false;
       document.getElementById('current-round').textContent = round;
@@ -967,6 +1067,8 @@
       document.getElementById('writing-area').style.display = 'block';
       document.getElementById('locked-message').style.display = 'none';
       document.getElementById('submitted-message').style.display = 'none';
+      document.getElementById('time-up-overlay').style.display = 'none';
+      document.getElementById('playing-screen').classList.remove('time-up-state');
 
       if (previousParagraph) {
         document.getElementById('previous-para-container').style.display = 'block';
@@ -982,9 +1084,6 @@
     // Timer
     socket.on('timer-tick', ({ timeRemaining }) => {
       updateTimer(timeRemaining);
-      if (timeRemaining <= 0 && !submitted) {
-        lockWriting();
-      }
     });
 
     function updateTimer(seconds) {
@@ -1008,32 +1107,76 @@
       }
     }
 
-    function lockWriting() {
+    // Time's up — lock writing, turn screen red, show pending players
+    let allPlayerNames = [];
+
+    socket.on('time-up', ({ pending, allPlayers }) => {
       locked = true;
-      if (!submitted) {
-        // Auto-submit whatever they have
-        const text = document.getElementById('paragraph-input').value.trim();
-        if (text) {
-          socket.emit('submit-paragraph', { text });
-        }
+      allPlayerNames = allPlayers;
+      const screen = document.getElementById('playing-screen');
+
+      // If user already submitted, hide writing area — no red screen
+      if (submitted) {
+        document.getElementById('writing-area').style.display = 'none';
+        document.getElementById('submitted-message').style.display = 'none';
+        screen.classList.remove('time-up-state');
+      } else {
+        // Keep writing area visible so they can finish and submit — red screen
+        screen.classList.add('time-up-state');
+        document.getElementById('writing-area').style.display = 'block';
+        document.getElementById('paragraph-input').disabled = false;
+        document.getElementById('submit-para-btn').disabled = false;
       }
-      document.getElementById('paragraph-input').disabled = true;
-      document.getElementById('submit-para-btn').disabled = true;
-      document.getElementById('writing-area').style.display = 'none';
-      document.getElementById('locked-message').style.display = 'block';
+
+      document.getElementById('locked-message').style.display = 'none';
+      document.getElementById('time-up-overlay').style.display = 'block';
+
+      renderPendingList(pending);
+
+      if (isHost) {
+        document.getElementById('time-up-host-controls').style.display = 'block';
+        document.getElementById('time-up-guest-waiting').style.display = 'none';
+      } else {
+        document.getElementById('time-up-host-controls').style.display = 'none';
+        document.getElementById('time-up-guest-waiting').style.display = 'block';
+      }
+    });
+
+    // Live submission updates — refresh pending list
+    socket.on('submission-update', ({ pending }) => {
+      renderPendingList(pending);
+    });
+
+    function renderPendingList(pending) {
+      const list = document.getElementById('pending-players-list');
+      const players = allPlayerNames.length > 0 ? allPlayerNames : pending;
+
+      list.innerHTML = players.map(name => {
+        const isPending = pending.includes(name);
+        return `<li>
+          <span class="pending-dot ${isPending ? 'waiting' : 'done'}"></span>
+          <span class="pending-name ${isPending ? '' : 'done'}">${name}</span>
+          <span style="margin-left:auto;font-size:0.75rem;color:var(--on-surface-variant)">${isPending ? 'Writing...' : 'Submitted'}</span>
+        </li>`;
+      }).join('');
+    }
+
+    function endRound() {
+      socket.emit('end-round');
     }
 
     function submitParagraph() {
       const text = document.getElementById('paragraph-input').value.trim();
       if (!text) return alert('Write something first!');
-      if (submitted || locked) return;
+      if (submitted) return;
 
       submitted = true;
       socket.emit('submit-paragraph', { text });
       document.getElementById('paragraph-input').disabled = true;
       document.getElementById('submit-para-btn').disabled = true;
       document.getElementById('writing-area').style.display = 'none';
-      document.getElementById('submitted-message').style.display = 'block';
+      document.getElementById('submitted-message').style.display = locked ? 'none' : 'block';
+      document.getElementById('playing-screen').classList.remove('time-up-state');
     }
 
     socket.on('paragraph-accepted', () => {

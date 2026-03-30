@@ -33,6 +33,7 @@ io.on('connection', (socket) => {
       totalRounds: 0,
       stories: [],       // array of arrays: stories[storyIndex][paragraphIndex]
       assignments: [],    // assignments[playerIndex] = storyIndex they're writing
+      roundTime: 90,
       timerInterval: null,
       timeRemaining: 0,
     };
@@ -64,6 +65,13 @@ io.on('connection', (socket) => {
       players: game.players.map(p => p.name),
       hostName: game.hostName,
     });
+  });
+
+  socket.on('set-time', ({ time }) => {
+    const game = games.get(currentGameCode);
+    if (!game || socket.id !== game.host) return;
+    const allowed = [10, 60, 90, 120];
+    if (allowed.includes(time)) game.roundTime = time;
   });
 
   socket.on('set-prompt', ({ prompt }) => {
@@ -108,7 +116,7 @@ io.on('connection', (socket) => {
 
     game.round++;
     game.state = 'playing';
-    game.timeRemaining = 90;
+    game.timeRemaining = game.roundTime;
 
     // Send each player their view: only the previous paragraph (or prompt if round 1)
     game.players.forEach((player, playerIndex) => {
@@ -124,8 +132,12 @@ io.on('connection', (socket) => {
         prompt: game.prompt,
         previousParagraph,
         timeRemaining: game.timeRemaining,
+        totalTime: game.roundTime,
       });
     });
+
+    // Track who has submitted this round
+    game.submittedThisRound = new Set();
 
     // Start countdown
     if (game.timerInterval) clearInterval(game.timerInterval);
@@ -135,14 +147,26 @@ io.on('connection', (socket) => {
       if (game.timeRemaining <= 0) {
         clearInterval(game.timerInterval);
         game.timerInterval = null;
-        endRound(game, currentGameCode);
+        game.state = 'time-up';
+        const allNames = game.players.map(p => p.name);
+        const pending = game.players
+          .filter(p => !game.submittedThisRound.has(p.id))
+          .map(p => p.name);
+        io.to(currentGameCode).emit('time-up', { pending, allPlayers: allNames });
       }
     }, 1000);
   });
 
+  socket.on('end-round', () => {
+    const game = games.get(currentGameCode);
+    if (!game || socket.id !== game.host) return;
+    if (game.state !== 'time-up') return;
+    endRound(game, currentGameCode);
+  });
+
   socket.on('submit-paragraph', ({ text }) => {
     const game = games.get(currentGameCode);
-    if (!game || game.state !== 'playing') return;
+    if (!game || (game.state !== 'playing' && game.state !== 'time-up')) return;
 
     const playerIndex = game.players.findIndex(p => p.id === socket.id);
     if (playerIndex === -1) return;
@@ -163,7 +187,14 @@ io.on('connection', (socket) => {
       round: game.round,
     });
 
+    game.submittedThisRound.add(socket.id);
     socket.emit('paragraph-accepted');
+
+    // Broadcast updated submission status
+    const pending = game.players
+      .filter(p => !game.submittedThisRound.has(p.id))
+      .map(p => p.name);
+    io.to(currentGameCode).emit('submission-update', { pending });
   });
 
   socket.on('disconnect', () => {
