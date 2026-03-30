@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pass the Story</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500;1,700&family=Be+Vietnam+Pro:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* ===== DESIGN TOKENS ===== */
+    :root {
+      --surface: #100c1a;
+      --surface-bright: #2f2747;
+      --surface-container-lowest: #000000;
+      --surface-container-low: #1a1528;
+      --surface-container: #211b30;
+      --surface-container-high: #2a2340;
+      --surface-container-highest: #352d4e;
+      --surface-tint: rgba(206, 177, 255, 0.1);
+
+      --primary: #ceb1ff;
+      --primary-dim: rgba(206, 177, 255, 0.3);
+      --primary-container: #c2a0fc;
+      --on-primary-container: #ebe1ff;
+
+      --secondary: #f3c01a;
+      --secondary-dim: rgba(243, 192, 26, 0.15);
+
+      --on-surface: #ebe1ff;
+      --on-surface-variant: #a99cc0;
+      --outline-variant: rgba(169, 156, 192, 0.15);
+
+      --error-container: #3d1520;
+      --on-error-container: #ffb3b3;
+
+      --font-display: 'Plus Jakarta Sans', sans-serif;
+      --font-body: 'Be Vietnam Pro', sans-serif;
+
+      --radius-md: 1rem;
+      --radius-lg: 1.5rem;
+      --radius-xl: 3rem;
+      --radius-full: 9999px;
+    }
+
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--surface);
+      color: var(--on-surface);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app-shell {
+      max-width: 480px;
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== HEADER ===== */
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem 1.5rem;
+      gap: 0.5rem;
+    }
+    .app-header h1 {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: -0.02em;
+    }
+
+    /* ===== SCREEN SYSTEM ===== */
+    .screen { display: none; flex: 1; padding: 0 1.5rem 2rem; }
+    .screen.active { display: flex; flex-direction: column; }
+
+    /* ===== TYPOGRAPHY ===== */
+    .display-lg {
+      font-family: var(--font-display);
+      font-size: 2.5rem;
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      color: var(--on-surface);
+    }
+    .display-lg em {
+      font-style: italic;
+      color: var(--primary);
+    }
+    .headline-md {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--on-surface);
+    }
+    .headline-sm {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--on-surface);
+    }
+    .label-lg {
+      font-family: var(--font-display);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--on-surface-variant);
+    }
+    .label-sm {
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--on-surface-variant);
+    }
+    .body-lg {
+      font-family: var(--font-body);
+      font-size: 1rem;
+      line-height: 1.7;
+      color: var(--on-surface);
+      font-weight: 300;
+    }
+    .body-md {
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      line-height: 1.6;
+      color: var(--on-surface-variant);
+    }
+
+    /* ===== CARDS / SURFACES ===== */
+    .card {
+      background: var(--surface-container-low);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+    }
+    .card-elevated {
+      background: var(--surface-container-high);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+    }
+    .card-highest {
+      background: var(--surface-container-highest);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+    }
+
+    /* ===== INPUTS (The "Scribe" Input) ===== */
+    input, textarea {
+      width: 100%;
+      padding: 1rem 1.25rem;
+      font-family: var(--font-body);
+      font-size: 1rem;
+      color: var(--on-surface);
+      background: var(--surface-container-high);
+      border: none;
+      border-radius: var(--radius-xl);
+      outline: none;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    input::placeholder, textarea::placeholder {
+      color: var(--on-surface-variant);
+      opacity: 0.5;
+    }
+    input:focus, textarea:focus {
+      background: var(--surface-bright);
+      box-shadow: 0 0 0 2px var(--primary-dim);
+    }
+    textarea {
+      border-radius: var(--radius-lg);
+      resize: vertical;
+      min-height: 140px;
+      line-height: 1.7;
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 1rem 2rem;
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--surface);
+      background: linear-gradient(135deg, var(--primary), var(--primary-container));
+      border: none;
+      border-radius: var(--radius-full);
+      cursor: pointer;
+      transition: transform 0.15s, opacity 0.15s;
+      letter-spacing: -0.01em;
+    }
+    .btn-primary:hover { transform: translateY(-1px); opacity: 0.92; }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled {
+      background: var(--surface-container-high);
+      color: var(--on-surface-variant);
+      cursor: not-allowed;
+      transform: none;
+      opacity: 0.5;
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 1rem 2rem;
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--on-primary-container);
+      background: var(--surface-container-highest);
+      border: none;
+      border-radius: var(--radius-full);
+      cursor: pointer;
+      transition: transform 0.15s, background 0.15s;
+    }
+    .btn-secondary:hover { transform: translateY(-1px); background: var(--surface-bright); }
+    .btn-secondary:active { transform: translateY(0); }
+
+    .btn-tertiary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: none;
+      padding: 0.5rem 1rem;
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--secondary);
+      cursor: pointer;
+    }
+    .btn-tertiary:hover { text-decoration: underline; }
+
+    /* ===== FORM GROUPS ===== */
+    .form-group { margin-bottom: 1.25rem; }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.6rem;
+      font-family: var(--font-display);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--on-surface-variant);
+    }
+    .char-count {
+      text-align: right;
+      font-size: 0.75rem;
+      color: var(--on-surface-variant);
+      opacity: 0.5;
+      margin-top: 0.4rem;
+    }
+
+    /* ===== GAME CODE DISPLAY ===== */
+    .game-code-card {
+      background: var(--surface-container-high);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      text-align: center;
+    }
+    .game-code-value {
+      font-family: var(--font-display);
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: 0.4rem;
+      color: var(--secondary);
+      margin: 0.75rem 0 0.25rem;
+    }
+    .game-code-hint {
+      font-size: 0.8rem;
+      color: var(--on-surface-variant);
+      opacity: 0.6;
+    }
+
+    /* ===== PLAYER LIST ===== */
+    .player-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .player-list li {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.9rem 1.1rem;
+      background: var(--surface-container-high);
+      border-radius: var(--radius-lg);
+      transition: background 0.15s;
+    }
+    .player-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-full);
+      background: var(--surface-container-highest);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--primary);
+      flex-shrink: 0;
+    }
+    .player-info { flex: 1; }
+    .player-name {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--on-surface);
+    }
+    .player-role {
+      font-size: 0.75rem;
+      color: var(--on-surface-variant);
+      margin-top: 0.1rem;
+    }
+    .host-badge {
+      font-family: var(--font-display);
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      padding: 0.2rem 0.5rem;
+      border-radius: var(--radius-full);
+      background: var(--secondary-dim);
+      color: var(--secondary);
+    }
+
+    /* ===== CIRCULAR TIMER (Chronos) ===== */
+    .timer-container {
+      display: flex;
+      justify-content: center;
+      margin: 1.25rem 0;
+    }
+    .timer-ring {
+      position: relative;
+      width: 120px;
+      height: 120px;
+    }
+    .timer-ring svg {
+      transform: rotate(-90deg);
+      width: 120px;
+      height: 120px;
+    }
+    .timer-ring-bg {
+      fill: none;
+      stroke: var(--surface-container-highest);
+      stroke-width: 6;
+    }
+    .timer-ring-progress {
+      fill: none;
+      stroke: var(--secondary);
+      stroke-width: 6;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear, stroke 0.3s;
+    }
+    .timer-ring-progress.warning { stroke: var(--secondary); }
+    .timer-ring-progress.danger { stroke: #e94560; }
+    .timer-digits {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .timer-digits .seconds {
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--on-surface);
+      line-height: 1;
+    }
+    .timer-digits .seconds-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--on-surface-variant);
+      margin-top: 0.2rem;
+    }
+    @keyframes pulse-glow {
+      0%, 100% { filter: drop-shadow(0 0 6px rgba(233, 69, 96, 0.4)); }
+      50% { filter: drop-shadow(0 0 16px rgba(233, 69, 96, 0.8)); }
+    }
+    .timer-ring.danger-state svg { animation: pulse-glow 0.8s ease-in-out infinite; }
+
+    /* ===== PROMPT DISPLAY ===== */
+    .prompt-display {
+      background: var(--surface-container-low);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+    .prompt-display .prompt-label {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-bottom: 0.6rem;
+    }
+    .prompt-display .prompt-text {
+      font-family: var(--font-body);
+      font-size: 1rem;
+      font-style: italic;
+      line-height: 1.6;
+      color: var(--on-surface);
+      font-weight: 300;
+    }
+
+    /* ===== PREVIOUS PARAGRAPH ===== */
+    .prev-paragraph-card {
+      background: var(--surface-container-high);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+    .prev-paragraph-card .prev-label {
+      margin-bottom: 0.6rem;
+    }
+    .prev-paragraph-card .prev-text {
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      line-height: 1.7;
+      color: var(--on-surface);
+      font-weight: 300;
+    }
+
+    /* ===== BETWEEN ROUNDS / WAITING ===== */
+    .waiting-message {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--on-surface-variant);
+      font-style: italic;
+      font-size: 0.9rem;
+    }
+    .locked-overlay {
+      text-align: center;
+      padding: 2rem 1.5rem;
+      background: var(--surface-container-high);
+      border-radius: var(--radius-lg);
+      margin-top: 1rem;
+    }
+
+    /* ===== STORY CARDS (Finished) ===== */
+    .story-card {
+      background: var(--surface-container-low);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .story-card-header {
+      margin-bottom: 1.25rem;
+    }
+    .story-card-header .chapter-label {
+      margin-bottom: 0.3rem;
+    }
+    .story-paragraph {
+      padding: 1rem 1.25rem;
+      background: var(--surface-container-high);
+      border-radius: var(--radius-md);
+      margin-bottom: 0.75rem;
+      line-height: 1.7;
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      font-weight: 300;
+    }
+    .story-paragraph:last-child { margin-bottom: 0; }
+    .story-paragraph .author {
+      font-size: 0.75rem;
+      color: var(--on-surface-variant);
+      margin-top: 0.5rem;
+      font-weight: 500;
+    }
+
+    /* ===== SPACERS ===== */
+    .spacer-xs { height: 0.5rem; }
+    .spacer-sm { height: 0.75rem; }
+    .spacer-md { height: 1.25rem; }
+    .spacer-lg { height: 2rem; }
+
+    /* ===== JOIN ERROR ===== */
+    .join-error {
+      background: var(--error-container);
+      color: var(--on-error-container);
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-md);
+      font-size: 0.85rem;
+      margin-top: 0.75rem;
+      display: none;
+    }
+
+    /* ===== SECTION HEADING ===== */
+    .section-heading {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 1rem;
+    }
+    .section-heading .count-badge {
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      font-weight: 700;
+      background: var(--surface-container-highest);
+      color: var(--on-surface-variant);
+      padding: 0.15rem 0.5rem;
+      border-radius: var(--radius-full);
+    }
+
+    /* ===== HOST POWER CARD ===== */
+    .host-power {
+      background: var(--surface-container);
+      border-radius: var(--radius-md);
+      padding: 0.9rem 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+
+    /* ===== BTN GROUP ===== */
+    .btn-group { display: flex; gap: 0.75rem; }
+    .btn-group > * { flex: 1; }
+
+    /* ===== ROUND INFO BADGE ===== */
+    .round-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      background: var(--surface-container-high);
+      border-radius: var(--radius-full);
+      padding: 0.4rem 1rem;
+      font-family: var(--font-display);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--on-surface-variant);
+    }
+
+    /* ===== GLASS FLOATING BAR ===== */
+    .glass-bar {
+      background: var(--surface-tint);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: var(--radius-full);
+      padding: 0.6rem 1.25rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* ===== BETWEEN ROUNDS HERO ===== */
+    .between-hero {
+      text-align: center;
+      padding: 2rem 0;
+    }
+    .between-hero .display-lg {
+      font-size: 2rem;
+      margin: 0.75rem 0 0.5rem;
+    }
+
+    /* ===== FINISHED HERO ===== */
+    .finished-hero { text-align: center; padding-bottom: 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <h1>Pass the Story</h1>
+    </header>
+
+    <!-- ==================== HOME SCREEN ==================== -->
+    <div id="home-screen" class="screen active">
+      <div class="spacer-lg"></div>
+      <div class="display-lg" style="text-align:center">Start a <em>New Tale</em></div>
+      <p class="body-md" style="text-align:center;margin-top:0.5rem">A collaborative storytelling game. Create or join a game to begin weaving your story.</p>
+
+      <div class="spacer-lg"></div>
+      <div class="spacer-lg"></div>
+
+      <div class="form-group">
+        <label>Your Name</label>
+        <input type="text" id="player-name" placeholder="What shall we call you?" maxlength="30">
+      </div>
+
+      <div class="spacer-sm"></div>
+
+      <div class="btn-group">
+        <button class="btn-primary" onclick="showCreate()">Create Game</button>
+        <button class="btn-secondary" onclick="showJoin()">Join Game</button>
+      </div>
+    </div>
+
+    <!-- ==================== CREATE SCREEN ==================== -->
+    <div id="create-screen" class="screen">
+      <div class="spacer-md"></div>
+      <div class="display-lg">Ignite a <em>New Tale</em></div>
+      <p class="body-md" style="margin-top:0.5rem">Set the stage, invite your fellowship, and watch as the story takes on a life of its own.</p>
+
+      <div class="spacer-lg"></div>
+
+      <div class="card">
+        <div class="label-lg" style="margin-bottom:0.75rem">The Opening Line</div>
+        <div class="form-group" style="margin-bottom:0">
+          <textarea id="story-prompt" placeholder="Once upon a time in a nebula far beyond the reach of time..." maxlength="500"></textarea>
+          <div class="char-count"><span id="prompt-char-count">0</span>/500</div>
+        </div>
+      </div>
+
+      <div class="spacer-lg"></div>
+
+      <button class="btn-primary" onclick="createGame()" id="create-btn">Begin the Tale</button>
+
+      <div class="spacer-sm"></div>
+      <div style="text-align:center">
+        <button class="btn-tertiary" onclick="showScreen('home-screen')">Go Back</button>
+      </div>
+    </div>
+
+    <!-- ==================== JOIN SCREEN ==================== -->
+    <div id="join-screen" class="screen">
+      <div class="spacer-md"></div>
+      <div class="display-lg">Join the <em>Fellowship</em></div>
+      <p class="body-md" style="margin-top:0.5rem">Enter the code your host shared to join the cosmic rift.</p>
+
+      <div class="spacer-lg"></div>
+
+      <div class="card">
+        <div class="label-lg" style="margin-bottom:0.75rem">Fellowship Code</div>
+        <input type="text" id="game-code-input" placeholder="X K 9 Z" maxlength="6"
+               style="text-transform:uppercase;text-align:center;letter-spacing:0.5rem;font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--secondary)">
+      </div>
+
+      <div id="join-error" class="join-error"></div>
+
+      <div class="spacer-lg"></div>
+
+      <button class="btn-primary" onclick="joinGame()" id="join-btn">Enter the Rift</button>
+
+      <div class="spacer-sm"></div>
+      <div style="text-align:center">
+        <button class="btn-tertiary" onclick="showScreen('home-screen')">Go Back</button>
+      </div>
+    </div>
+
+    <!-- ==================== LOBBY SCREEN ==================== -->
+    <div id="lobby-screen" class="screen">
+      <div class="spacer-sm"></div>
+
+      <div class="label-lg" style="text-align:center;margin-bottom:0.5rem">Invite Your Fellowship</div>
+      <div class="game-code-card">
+        <div class="game-code-value" id="lobby-code"></div>
+        <div class="game-code-hint">Share this code with your co-authors to begin</div>
+      </div>
+
+      <div class="spacer-lg"></div>
+
+      <div id="lobby-prompt-display" class="prompt-display" style="display:none">
+        <div class="prompt-label">
+          <span class="label-sm">The Opening Line</span>
+        </div>
+        <div class="prompt-text" id="lobby-prompt-text"></div>
+      </div>
+
+      <div class="spacer-md"></div>
+
+      <div class="section-heading">
+        <span class="headline-sm">Joined Players</span>
+        <span class="count-badge" id="player-count">0</span>
+      </div>
+
+      <ul class="player-list" id="lobby-players"></ul>
+
+      <div class="spacer-lg"></div>
+
+      <div id="host-controls" style="display:none">
+        <div class="host-power">
+          <div>
+            <div class="label-sm">Host Power</div>
+            <div class="body-md" style="color:var(--on-surface);margin-top:0.15rem">You are the Weaver</div>
+          </div>
+        </div>
+
+        <div class="form-group" id="lobby-prompt-edit">
+          <label>Story Prompt</label>
+          <textarea id="lobby-prompt-input" placeholder="Write the opening line for your tale..." maxlength="500"></textarea>
+        </div>
+
+        <div class="spacer-sm"></div>
+        <button class="btn-primary" onclick="startGame()" id="start-game-btn" disabled>Begin the Tale</button>
+        <div class="label-sm" style="text-align:center;margin-top:0.6rem">Only you can start the ritual</div>
+      </div>
+
+      <div id="guest-waiting" class="waiting-message">
+        Waiting for the host to start the tale...
+      </div>
+    </div>
+
+    <!-- ==================== PLAYING SCREEN ==================== -->
+    <div id="playing-screen" class="screen">
+      <div style="text-align:center">
+        <div class="round-badge">Chapter <span id="current-round">1</span> of <span id="total-rounds">4</span></div>
+      </div>
+
+      <div class="timer-container">
+        <div class="timer-ring" id="timer-ring">
+          <svg viewBox="0 0 120 120">
+            <circle class="timer-ring-bg" cx="60" cy="60" r="52" />
+            <circle class="timer-ring-progress" id="timer-progress" cx="60" cy="60" r="52"
+                    stroke-dasharray="326.73" stroke-dashoffset="0" />
+          </svg>
+          <div class="timer-digits">
+            <span class="seconds" id="timer">90</span>
+            <span class="seconds-label">seconds</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="prompt-display" id="game-prompt-card">
+        <div class="prompt-label">
+          <span class="label-sm">The Opening Line</span>
+        </div>
+        <div class="prompt-text" id="game-prompt"></div>
+      </div>
+
+      <div id="previous-para-container" class="prev-paragraph-card" style="display:none">
+        <div class="label-sm prev-label">Previous paragraph</div>
+        <div class="prev-text" id="previous-para-text"></div>
+      </div>
+
+      <div id="writing-area">
+        <div class="form-group">
+          <label>Your paragraph</label>
+          <textarea id="paragraph-input" placeholder="Continue the story..."></textarea>
+        </div>
+        <button class="btn-primary" onclick="submitParagraph()" id="submit-para-btn">Submit Chapter</button>
+      </div>
+
+      <div id="locked-message" class="locked-overlay" style="display:none">
+        <div class="headline-md" style="margin-bottom:0.4rem">Time's up!</div>
+        <p class="body-md">The quill has been sealed. Waiting for the next chapter...</p>
+      </div>
+
+      <div id="submitted-message" class="waiting-message" style="display:none">
+        Chapter submitted! Waiting for the round to end...
+      </div>
+    </div>
+
+    <!-- ==================== BETWEEN ROUNDS SCREEN ==================== -->
+    <div id="between-screen" class="screen">
+      <div class="between-hero">
+        <div class="label-lg">Chapter <span id="next-round">2</span> Awaits</div>
+        <div class="display-lg">The Loom is <em>Gathering</em></div>
+        <p class="body-md" style="margin-top:0.5rem">Stories are being passed to the next writer. Prepare to weave the next thread.</p>
+        <div class="spacer-sm"></div>
+        <div class="round-badge">Round <span id="next-round-badge">2</span> of <span id="next-total">4</span></div>
+      </div>
+
+      <div class="spacer-lg"></div>
+
+      <div id="between-host-controls" style="display:none;text-align:center">
+        <button class="btn-primary" onclick="startRound()">Start Next Round</button>
+        <div class="label-sm" style="margin-top:0.6rem">Release the next thread</div>
+      </div>
+      <div id="between-guest-waiting" class="waiting-message">
+        Waiting for the host to release the next thread...
+      </div>
+    </div>
+
+    <!-- ==================== FINISHED SCREEN ==================== -->
+    <div id="finished-screen" class="screen">
+      <div class="finished-hero">
+        <div class="label-lg">Chronicle Complete</div>
+        <div class="spacer-xs"></div>
+        <div class="display-lg">The Tales <em>Unfold</em></div>
+        <div class="spacer-sm"></div>
+        <div class="prompt-display" id="finished-prompt-card">
+          <div class="prompt-label">
+            <span class="label-sm">The Opening Line</span>
+          </div>
+          <div class="prompt-text" id="finished-prompt"></div>
+        </div>
+      </div>
+
+      <div id="stories-container"></div>
+
+      <div class="spacer-lg"></div>
+      <button class="btn-primary" onclick="location.reload()">Begin a New Tale</button>
+      <div class="spacer-lg"></div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    let isHost = false;
+    let gameCode = null;
+    let submitted = false;
+    let locked = false;
+    const TOTAL_TIME = 90;
+    const CIRCUMFERENCE = 2 * Math.PI * 52; // ~326.73
+
+    // Screen management
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    function showCreate() {
+      const name = document.getElementById('player-name').value.trim();
+      if (!name) return alert('Please enter your name');
+      showScreen('create-screen');
+    }
+
+    function showJoin() {
+      const name = document.getElementById('player-name').value.trim();
+      if (!name) return alert('Please enter your name');
+      showScreen('join-screen');
+    }
+
+    // Prompt character counter
+    document.getElementById('story-prompt').addEventListener('input', (e) => {
+      document.getElementById('prompt-char-count').textContent = e.target.value.length;
+    });
+
+    // Create game
+    function createGame() {
+      const name = document.getElementById('player-name').value.trim();
+      const prompt = document.getElementById('story-prompt').value.trim();
+      if (!prompt) return alert('Please enter a story prompt');
+
+      document.getElementById('create-btn').disabled = true;
+      socket.emit('create-game', { playerName: name }, (res) => {
+        document.getElementById('create-btn').disabled = false;
+        if (res.success) {
+          isHost = true;
+          gameCode = res.code;
+          enterLobby(res.code, prompt);
+          socket.emit('set-prompt', { prompt });
+        }
+      });
+    }
+
+    // Join game
+    function joinGame() {
+      const name = document.getElementById('player-name').value.trim();
+      const code = document.getElementById('game-code-input').value.trim().toUpperCase();
+      if (!code) return alert('Please enter a game code');
+
+      document.getElementById('join-btn').disabled = true;
+      document.getElementById('join-error').style.display = 'none';
+      socket.emit('join-game', { code, playerName: name }, (res) => {
+        document.getElementById('join-btn').disabled = false;
+        if (res.success) {
+          isHost = false;
+          gameCode = res.code;
+          enterLobby(res.code);
+        } else {
+          document.getElementById('join-error').textContent = res.error;
+          document.getElementById('join-error').style.display = 'block';
+        }
+      });
+    }
+
+    function enterLobby(code, prompt) {
+      document.getElementById('lobby-code').textContent = code;
+      showScreen('lobby-screen');
+
+      if (isHost) {
+        document.getElementById('host-controls').style.display = 'block';
+        document.getElementById('guest-waiting').style.display = 'none';
+        if (prompt) {
+          document.getElementById('lobby-prompt-input').value = prompt;
+        }
+        document.getElementById('lobby-prompt-input').addEventListener('input', (e) => {
+          socket.emit('set-prompt', { prompt: e.target.value.trim() });
+        });
+      } else {
+        document.getElementById('host-controls').style.display = 'none';
+        document.getElementById('guest-waiting').style.display = 'block';
+      }
+    }
+
+    // Lobby updates
+    socket.on('lobby-update', ({ players, hostName }) => {
+      const list = document.getElementById('lobby-players');
+      document.getElementById('player-count').textContent = players.length;
+      list.innerHTML = players.map(name => {
+        const initial = name.charAt(0).toUpperCase();
+        const isHostPlayer = name === hostName;
+        return `<li>
+          <div class="player-avatar">${initial}</div>
+          <div class="player-info">
+            <div class="player-name">${name}</div>
+            <div class="player-role">${isHostPlayer ? 'The Host' : 'Ready to scribe'}</div>
+          </div>
+          ${isHostPlayer ? '<span class="host-badge">HOST</span>' : ''}
+        </li>`;
+      }).join('');
+
+      if (isHost) {
+        const btn = document.getElementById('start-game-btn');
+        btn.disabled = players.length < 2;
+        btn.textContent = players.length < 2
+          ? 'Need 2+ players to begin'
+          : `Begin the Tale`;
+      }
+    });
+
+    socket.on('prompt-updated', ({ prompt }) => {
+      if (!isHost) {
+        const display = document.getElementById('lobby-prompt-display');
+        display.style.display = 'block';
+        document.getElementById('lobby-prompt-text').textContent = prompt;
+      }
+    });
+
+    function startGame() {
+      const prompt = document.getElementById('lobby-prompt-input').value.trim();
+      if (!prompt) return alert('Please enter a story prompt');
+      socket.emit('set-prompt', { prompt });
+      socket.emit('start-game');
+    }
+
+    socket.on('game-started', ({ prompt, totalRounds }) => {
+      // Game is about to begin, wait for between-rounds signal
+    });
+
+    // Between rounds
+    socket.on('between-rounds', ({ round, totalRounds }) => {
+      document.getElementById('next-round').textContent = round;
+      document.getElementById('next-round-badge').textContent = round;
+      document.getElementById('next-total').textContent = totalRounds;
+
+      if (isHost) {
+        document.getElementById('between-host-controls').style.display = 'block';
+        document.getElementById('between-guest-waiting').style.display = 'none';
+      } else {
+        document.getElementById('between-host-controls').style.display = 'none';
+        document.getElementById('between-guest-waiting').style.display = 'block';
+      }
+      showScreen('between-screen');
+    });
+
+    function startRound() {
+      socket.emit('start-round');
+    }
+
+    // Round start
+    socket.on('round-start', ({ round, totalRounds, prompt, previousParagraph, timeRemaining }) => {
+      submitted = false;
+      locked = false;
+      document.getElementById('current-round').textContent = round;
+      document.getElementById('total-rounds').textContent = totalRounds;
+      document.getElementById('game-prompt').textContent = prompt;
+      document.getElementById('paragraph-input').value = '';
+      document.getElementById('paragraph-input').disabled = false;
+      document.getElementById('submit-para-btn').disabled = false;
+      document.getElementById('writing-area').style.display = 'block';
+      document.getElementById('locked-message').style.display = 'none';
+      document.getElementById('submitted-message').style.display = 'none';
+
+      if (previousParagraph) {
+        document.getElementById('previous-para-container').style.display = 'block';
+        document.getElementById('previous-para-text').textContent = previousParagraph;
+      } else {
+        document.getElementById('previous-para-container').style.display = 'none';
+      }
+
+      updateTimer(timeRemaining);
+      showScreen('playing-screen');
+    });
+
+    // Timer
+    socket.on('timer-tick', ({ timeRemaining }) => {
+      updateTimer(timeRemaining);
+      if (timeRemaining <= 0 && !submitted) {
+        lockWriting();
+      }
+    });
+
+    function updateTimer(seconds) {
+      const el = document.getElementById('timer');
+      el.textContent = seconds;
+
+      // Update circular progress
+      const progress = document.getElementById('timer-progress');
+      const offset = CIRCUMFERENCE * (1 - seconds / TOTAL_TIME);
+      progress.style.strokeDashoffset = offset;
+
+      // Color states
+      const ring = document.getElementById('timer-ring');
+      ring.classList.remove('danger-state');
+      progress.classList.remove('warning', 'danger');
+      if (seconds <= 10) {
+        progress.classList.add('danger');
+        ring.classList.add('danger-state');
+      } else if (seconds <= 30) {
+        progress.classList.add('warning');
+      }
+    }
+
+    function lockWriting() {
+      locked = true;
+      if (!submitted) {
+        // Auto-submit whatever they have
+        const text = document.getElementById('paragraph-input').value.trim();
+        if (text) {
+          socket.emit('submit-paragraph', { text });
+        }
+      }
+      document.getElementById('paragraph-input').disabled = true;
+      document.getElementById('submit-para-btn').disabled = true;
+      document.getElementById('writing-area').style.display = 'none';
+      document.getElementById('locked-message').style.display = 'block';
+    }
+
+    function submitParagraph() {
+      const text = document.getElementById('paragraph-input').value.trim();
+      if (!text) return alert('Write something first!');
+      if (submitted || locked) return;
+
+      submitted = true;
+      socket.emit('submit-paragraph', { text });
+      document.getElementById('paragraph-input').disabled = true;
+      document.getElementById('submit-para-btn').disabled = true;
+      document.getElementById('writing-area').style.display = 'none';
+      document.getElementById('submitted-message').style.display = 'block';
+    }
+
+    socket.on('paragraph-accepted', () => {
+      submitted = true;
+    });
+
+    // Game finished
+    socket.on('game-finished', ({ stories, prompt }) => {
+      document.getElementById('finished-prompt').textContent = prompt;
+      const container = document.getElementById('stories-container');
+      container.innerHTML = stories.map((story, i) => `
+        <div class="story-card">
+          <div class="story-card-header">
+            <div class="label-sm chapter-label">Chapter ${i + 1} &middot; Started by ${story.startedBy}</div>
+            <div class="headline-md" style="color:var(--primary)">${story.startedBy}'s Tale</div>
+          </div>
+          ${story.paragraphs.map((p, j) => `
+            <div class="story-paragraph">
+              <div>${p.text}</div>
+              <div class="author">&mdash; ${p.author}</div>
+            </div>
+          `).join('')}
+        </div>
+      `).join('');
+      showScreen('finished-screen');
+    });
+
+    // Auto-emit lobby update when first entering
+    socket.on('connect', () => {
+      // Re-entry not handled for simplicity
+    });
+  </script>
+</body>
+</html>
